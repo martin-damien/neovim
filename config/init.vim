@@ -21,6 +21,8 @@ endif
 
 call plug#begin('~/.local/share/nvim/plugged')
 
+Plug 'morhetz/gruvbox'
+Plug 'dracula/vim'
 Plug 'NLKNguyen/papercolor-theme'
 
 Plug 'SirVer/ultisnips' | Plug 'phux/vim-snippets'
@@ -43,6 +45,10 @@ Plug 'StanAngeloff/php.vim', {'for': 'php'}
 Plug 'w0rp/ale'
 
 Plug 'scrooloose/nerdtree'
+
+Plug 'editorconfig/editorconfig-vim'
+
+Plug 'nightsense/night-and-day'
 
 call plug#end()
 
@@ -89,6 +95,20 @@ augroup END
 " =============================================================================
 " Plugins
 " =============================================================================
+
+" Night and day settings ------------------------------------------------------
+
+" NB: Those settings are for Reims, France
+
+let g:nd_themes = [
+  \ ['sunrise+0',   'gruvbox',    'light', 'gruvbox' ],
+  \ ['sunrise+1/2', 'PaperColor', 'light', 'papercolor' ],
+  \ ['sunset+0',    'dracula',    'dark',  'dracula'  ],
+  \ ]
+
+let g:nd_latitude = '50'
+let g:nd_timeshift = '14'
+let g:nd_airline = 1
 
 " PHPactor settings -----------------------------------------------------------
 
