@@ -36,11 +36,18 @@ Plug 'phpactor/ncm2-phpactor', {'for': 'php'}
 Plug 'ncm2/ncm2-ultisnips'
 
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf.vim'
+Plug 'pbogut/fzf-mru.vim'
 
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 
 Plug 'StanAngeloff/php.vim', {'for': 'php'}
+
+Plug 'adoy/vim-php-refactoring-toolbox', {'for': 'php'}
+Plug 'arnaud-lb/vim-php-namespace', {'for': 'php'}
+
+Plug 'alvan/vim-php-manual', {'for': 'php'}
 
 Plug 'w0rp/ale'
 
@@ -49,6 +56,7 @@ Plug 'scrooloose/nerdtree'
 Plug 'editorconfig/editorconfig-vim'
 
 Plug 'nightsense/night-and-day'
+Plug 'ludovicchabant/vim-gutentags'
 
 call plug#end()
 
@@ -65,8 +73,20 @@ set nu
 let g:airline_theme='papercolor'
 
 " =============================================================================
+" Editing
+" =============================================================================
+
+set tabstop=8
+set softtabstop=0
+set expandtab
+set shiftwidth=4
+set smarttab
+
+" =============================================================================
 " Keys mapping
 " =============================================================================
+
+let mapleader = " "
 
 inoremap <silent> <expr> <CR> (pumvisible() ? ncm2_ultisnips#expand_or("\<CR>", 'n') : "\<CR>")
 inoremap <expr> <TAB> pumvisible() ? "\<c-n>" : "\<TAB>"
@@ -75,8 +95,37 @@ inoremap <expr> <s-tab> pumvisible() ? "\<c-p>" : "\<TAB>"
 tnoremap <Esc> <C-\><C-n>
 
 nnoremap <C-p> :<C-u>FZF<CR>
-
 nnoremap <C-n> :NERDTreeToggle<CR>
+nnoremap <C-c> :call phpactor#ContextMenu()<CR>
+nnoremap <leader>rlv :call PhpRenameLocalVariable()<CR>
+nnoremap <leader>rcv :call PhpRenameClassVariable()<CR>
+nnoremap <leader>rrm :call PhpRenameMethod()<CR>
+nnoremap <leader>reu :call PhpExtractUse()<CR>
+nnoremap <leader>rep :call PhpExtractClassProperty()<CR>
+nnoremap <leader>rnp :call PhpCreateProperty()<CR>
+nnoremap <leader>rdu :call PhpDetectUnusedUseStatements()<CR>
+nnoremap <leader>rsg :call PhpCreateSettersAndGetters()<CR>:
+nnoremap <leader>rcc :call PhpConstructorArgumentMagic()<CR>
+nnoremap <leader>ric :call PHPModify("implement_contracts")<CR>
+nnoremap <leader>raa :call PHPModify("add_missing_properties")<CR>
+nnoremap <leader>rmc :call PHPMoveClass()<CR>
+nnoremap <leader>rmd :call PHPMoveDir()<CR>
+nnoremap <leader>h :call UpdatePhpDocIfExists()<CR>
+nnoremap <Leader>u :PHPImportClass<CR>
+nnoremap <Leader>e :PHPExpandFQCNAbsolute<CR>
+nnoremap <Leader>E :PHPExpandFQCN<CR>
+nnoremap <leader><Enter> :FZFMru<cr>
+nnoremap <leader>s :Rg<space>
+nnoremap <leader>R :exec "Rg ".expand("<cword>")<cr>
+nnoremap <leader>, :Files<cr>
+nnoremap <leader>. :call fzf#run({'sink': 'e', 'right': '40%'})<cr>
+nnoremap <leader>d :BTags<cr>
+nnoremap <leader>D :BTags <C-R><C-W><cr>
+nnoremap <leader>S :Tags<cr>
+nnoremap <leader><tab> :Buffers<cr>
+
+vnoremap // "hy:exec "Rg ".escape('<C-R>h', "/\.*$^~[()")<cr>
+vnoremap <leader>rec :call PhpExtractConst()<CR>
 
 command! -nargs=1 Silent execute ':silent !'.<q-args> | execute ':redraw!'
 map <c-s> <esc>:w<cr>:Silent php-cs-fixer fix %:p --level=symfony<cr>
@@ -86,10 +135,10 @@ map <c-s> <esc>:w<cr>:Silent php-cs-fixer fix %:p --level=symfony<cr>
 " =============================================================================
 
 augroup ncm2
-  au!
-  autocmd BufEnter * call ncm2#enable_for_buffer()
-  au User Ncm2PopupOpen set completeopt=noinsert,menuone,noselect
-  au User Ncm2PopupClose set completeopt=menuone
+    au!
+    autocmd BufEnter * call ncm2#enable_for_buffer()
+    au User Ncm2PopupOpen set completeopt=noinsert,menuone,noselect
+    au User Ncm2PopupClose set completeopt=menuone
 augroup END
 
 " =============================================================================
@@ -101,10 +150,10 @@ augroup END
 " NB: Those settings are for Reims, France
 
 let g:nd_themes = [
-  \ ['sunrise+0',   'gruvbox',    'light', 'gruvbox' ],
-  \ ['sunrise+1/2', 'PaperColor', 'light', 'papercolor' ],
-  \ ['sunset+0',    'dracula',    'dark',  'dracula'  ],
-  \ ]
+            \ ['sunrise+0',   'gruvbox',    'light', 'gruvbox' ],
+            \ ['sunrise+1/2', 'PaperColor', 'light', 'papercolor' ],
+            \ ['sunset+0',    'dracula',    'dark',  'dracula'  ],
+            \ ]
 
 let g:nd_latitude = '50'
 let g:nd_timeshift = '14'
@@ -135,7 +184,75 @@ let g:ale_php_phpcbf_standard='PSR2'
 let g:ale_php_phpcs_standard='phpcs.xml.dist'
 let g:ale_php_phpmd_ruleset='phpmd.xml'
 let g:ale_fixers = {
-  \ '*': ['remove_trailing_lines', 'trim_whitespace'],
-  \ 'php': ['phpcbf', 'php_cs_fixer', 'remove_trailing_lines', 'trim_whitespace'],
-  \}
+            \ '*': ['remove_trailing_lines', 'trim_whitespace'],
+            \ 'php': ['phpcbf', 'php_cs_fixer', 'remove_trailing_lines', 'trim_whitespace'],
+            \}
 let g:ale_fix_on_save = 1
+
+" PHP refactoring toolbox settings --------------------------------------------
+
+let g:vim_php_refactoring_default_property_visibility = 'private'
+let g:vim_php_refactoring_default_method_visibility = 'private'
+let g:vim_php_refactoring_auto_validate_visibility = 1
+let g:vim_php_refactoring_phpdoc = "pdv#DocumentCurrentLine"
+let g:vim_php_refactoring_use_default_mapping = 0
+
+" Vim PHP manual --------------------------------------------------------------
+
+let g:php_manual_online_search_shortcut = '<leader>k'
+
+" FZF -------------------------------------------------------------------------
+
+let g:fzf_mru_relative = 1
+let g:LanguageClient_selectionUI = 'fzf'
+
+" =============================================================================
+" Custom functions
+" =============================================================================
+
+function! PHPModify(transformer)
+    :update
+    let l:cmd = "silent !".g:phpactor_executable." class:transform ".expand('%').' --transform='.a:transformer
+    execute l:cmd
+endfunction
+
+function! PhpConstructorArgumentMagic()
+    if exists("*UpdatePhpDocIfExists")
+        normal! gg
+        /__construct
+        normal! n
+        :call UpdatePhpDocIfExists()
+        :w
+    endif
+    :call PHPModify("complete_constructor")
+endfunction
+
+function! PHPMoveClass()
+    :w
+    let l:oldPath = expand('%')
+    let l:newPath = input("New path: ", l:oldPath)
+    execute "!".g:phpactor_executable." class:move ".l:oldPath.' '.l:newPath
+    execute "bd ".l:oldPath
+    execute "e ". l:newPath
+endfunction
+
+function! PHPMoveDir()
+    :w
+    let l:oldPath = input("old path: ", expand('%:p:h'))
+    let l:newPath = input("New path: ", l:oldPath)
+    execute "!".g:phpactor_executable." class:move ".l:oldPath.' '.l:newPath
+endfunction
+
+function! UpdatePhpDocIfExists()
+    normal! k
+    if getline('.') =~ '/'
+        normal! V%d
+    else
+        normal! j
+    endif
+    call PhpDocSingle()
+    normal! k^%k$
+    if getline('.') =~ ';'
+        exe "normal! $svoid"
+    endif
+endfunction
