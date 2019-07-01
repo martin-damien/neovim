@@ -21,6 +21,9 @@ endif
 
 call plug#begin('~/.local/share/nvim/plugged')
 
+Plug 'jreybert/vimagit'
+
+Plug 'arcticicestudio/nord-vim'
 Plug 'morhetz/gruvbox'
 Plug 'dracula/vim'
 Plug 'NLKNguyen/papercolor-theme'
@@ -43,6 +46,7 @@ Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 
 Plug 'StanAngeloff/php.vim', {'for': 'php'}
+Plug 'nelsyeung/twig.vim'
 
 Plug 'adoy/vim-php-refactoring-toolbox', {'for': 'php'}
 Plug 'arnaud-lb/vim-php-namespace', {'for': 'php'}
@@ -55,8 +59,20 @@ Plug 'scrooloose/nerdtree'
 
 Plug 'editorconfig/editorconfig-vim'
 
-Plug 'nightsense/night-and-day'
+"Plug 'nightsense/night-and-day'
 Plug 'ludovicchabant/vim-gutentags'
+
+Plug 'ncm2/ncm2-tern',  {'do': 'npm install'}
+
+Plug 'airblade/vim-rooter'
+Plug 'justinmk/vim-sneak'
+Plug 'mhinz/vim-startify'
+Plug 'tpope/vim-speeddating'
+Plug 'xuyuanp/nerdtree-git-plugin'
+Plug 'airblade/vim-gitgutter'
+Plug 'tpope/vim-fugitive'
+
+Plug 'wakatime/vim-wakatime'
 
 call plug#end()
 
@@ -65,12 +81,11 @@ call plug#end()
 " =============================================================================
 
 set t_Co=256
-set background=light
-colorscheme PaperColor
 syntax on
 set nu
 
-let g:airline_theme='papercolor'
+colorscheme nord
+let g:airline_theme='nord'
 
 " =============================================================================
 " Editing
@@ -88,15 +103,26 @@ set smarttab
 
 let mapleader = " "
 
-inoremap <silent> <expr> <CR> (pumvisible() ? ncm2_ultisnips#expand_or("\<CR>", 'n') : "\<CR>")
-inoremap <expr> <TAB> pumvisible() ? "\<c-n>" : "\<TAB>"
-inoremap <expr> <s-tab> pumvisible() ? "\<c-p>" : "\<TAB>"
+" NCM2
+
+inoremap <silent> <expr> <CR> (pumvisible() ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>")
+inoremap <expr> <c-space> pumvisible() ? "\<c-n>" : "\<TAB>"
+inoremap <expr> <c-bs> pumvisible() ? "\<c-p>" : "\<TAB>"
+
+" Neovim terminal
 
 tnoremap <Esc> <C-\><C-n>
 
-nnoremap <C-p> :<C-u>FZF<CR>
+" NERDTree
+
 nnoremap <C-n> :NERDTreeToggle<CR>
+
+" PHPactor
+
 nnoremap <C-c> :call phpactor#ContextMenu()<CR>
+
+" ???
+
 nnoremap <leader>rlv :call PhpRenameLocalVariable()<CR>
 nnoremap <leader>rcv :call PhpRenameClassVariable()<CR>
 nnoremap <leader>rrm :call PhpRenameMethod()<CR>
@@ -106,14 +132,24 @@ nnoremap <leader>rnp :call PhpCreateProperty()<CR>
 nnoremap <leader>rdu :call PhpDetectUnusedUseStatements()<CR>
 nnoremap <leader>rsg :call PhpCreateSettersAndGetters()<CR>:
 nnoremap <leader>rcc :call PhpConstructorArgumentMagic()<CR>
+
+" Custom functions
+
 nnoremap <leader>ric :call PHPModify("implement_contracts")<CR>
 nnoremap <leader>raa :call PHPModify("add_missing_properties")<CR>
 nnoremap <leader>rmc :call PHPMoveClass()<CR>
 nnoremap <leader>rmd :call PHPMoveDir()<CR>
 nnoremap <leader>h :call UpdatePhpDocIfExists()<CR>
+
+" Vim PHP namespace
+
 nnoremap <Leader>u :PHPImportClass<CR>
 nnoremap <Leader>e :PHPExpandFQCNAbsolute<CR>
 nnoremap <Leader>E :PHPExpandFQCN<CR>
+
+" FZF
+
+nnoremap <C-p> :<C-u>FZF<CR>
 nnoremap <leader><Enter> :FZFMru<cr>
 nnoremap <leader>s :Rg<space>
 nnoremap <leader>R :exec "Rg ".expand("<cword>")<cr>
@@ -123,6 +159,8 @@ nnoremap <leader>d :BTags<cr>
 nnoremap <leader>D :BTags <C-R><C-W><cr>
 nnoremap <leader>S :Tags<cr>
 nnoremap <leader><tab> :Buffers<cr>
+
+" ???
 
 vnoremap // "hy:exec "Rg ".escape('<C-R>h', "/\.*$^~[()")<cr>
 vnoremap <leader>rec :call PhpExtractConst()<CR>
@@ -149,15 +187,16 @@ augroup END
 
 " NB: Those settings are for Reims, France
 
-let g:nd_themes = [
-            \ ['sunrise+0',   'gruvbox',    'light', 'gruvbox' ],
-            \ ['sunrise+1/2', 'PaperColor', 'light', 'papercolor' ],
-            \ ['sunset+0',    'dracula',    'dark',  'dracula'  ],
-            \ ]
+"let g:nd_themes = [
+"            \ ['sunrise+0',   'gruvbox',    'light', 'gruvbox' ],
+"            \ ['sunrise+1/4', 'PaperColor', 'light', 'papercolor' ],
+"            \ ['sunset+1/5',  'nord',       'dark',  'nord' ],
+"            \ ['sunset+1/3',  'gruvbox',    'dark',  'gruvbox'  ],
+"            \ ]
 
-let g:nd_latitude = '50'
-let g:nd_timeshift = '14'
-let g:nd_airline = 1
+"let g:nd_latitude = '50'
+"let g:nd_timeshift = '14'
+"let g:nd_airline = 1
 
 " PHPactor settings -----------------------------------------------------------
 
@@ -173,21 +212,20 @@ let g:ultisnips_php_scalar_types = 1
 
 " ALE settings ----------------------------------------------------------------
 
+let g:ale_lint_on_insert_leave = 1
 let g:ale_lint_on_text_changed = 'never'
-let g:ale_lint_on_enter = 0
+let g:ale_lint_on_enter = 1
 let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
-let g:ale_open_list = 1
+let g:ale_open_list = 0
 let g:ale_keep_list_window_open=0
 let g:ale_set_quickfix=0
 let g:ale_list_window_size = 5
-let g:ale_php_phpcbf_standard='PSR2'
 let g:ale_php_phpcs_standard='phpcs.xml.dist'
-let g:ale_php_phpmd_ruleset='phpmd.xml'
-let g:ale_fixers = {
-            \ '*': ['remove_trailing_lines', 'trim_whitespace'],
-            \ 'php': ['phpcbf', 'php_cs_fixer', 'remove_trailing_lines', 'trim_whitespace'],
+let g:ale_linters_explicit = 1
+let g:ale_linters = {
+            \ 'php': ['psalm', 'php_cs_fixer', 'remove_trailing_lines', 'trim_whitespace'],
             \}
-let g:ale_fix_on_save = 1
+let g:airline#extensions#ale#enabled = 1
 
 " PHP refactoring toolbox settings --------------------------------------------
 
@@ -205,6 +243,35 @@ let g:php_manual_online_search_shortcut = '<leader>k'
 
 let g:fzf_mru_relative = 1
 let g:LanguageClient_selectionUI = 'fzf'
+
+" Rooter  --------------------------------------------------------------------- 
+
+let g:rooter_patterns = ['composer.json', '.git/']
+
+" Git NerdTree ----------------------------------------------------------------
+
+let g:NERDTreeIndicatorMapCustom = {
+    \ "Modified"  : "✹",
+    \ "Staged"    : "✚",
+    \ "Untracked" : "✭",
+    \ "Renamed"   : "➜",
+    \ "Unmerged"  : "═",
+    \ "Deleted"   : "✖",
+    \ "Dirty"     : "✗",
+    \ "Clean"     : "✔︎",
+    \ 'Ignored'   : '☒',
+    \ "Unknown"   : "?"
+    \ }
+
+let g:NERDTreeShowIgnoredStatus = 1
+
+" Git Gutter ------------------------------------------------------------------
+
+let g:gitgutter_sign_added = '█'
+let g:gitgutter_sign_modified = '█'
+let g:gitgutter_sign_removed = '█'
+let g:gitgutter_sign_removed_first_line = '░'
+let g:gitgutter_sign_modified_removed = '░'
 
 " =============================================================================
 " Custom functions
